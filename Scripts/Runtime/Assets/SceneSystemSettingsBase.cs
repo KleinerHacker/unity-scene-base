@@ -87,7 +87,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         public Transform ESXROrigin => esXROrigin;
 
-        public GameObject BlendingSystem => blendingSystem.gameObject;
+        public GameObject BlendingSystem => blendingSystem?.gameObject;
 
         public SceneBlendState StartupBlendState => startupBlendState;
 

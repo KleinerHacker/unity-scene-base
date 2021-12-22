@@ -1,6 +1,6 @@
 {
   "name": "org.pcsoft.scene-base",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "displayName": "Unity Scene System Base Module",
   "description": "Scene System Basic Module for Unity",
   "unity": "2021.1",

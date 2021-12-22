@@ -24,8 +24,11 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         {
             Debug.Log("Loading scene system basics");
 
-            var goBlendingSystem = Instantiate(blendingSystem);
-            DontDestroyOnLoad(goBlendingSystem);
+            if (blendingSystem != null)
+            {
+                var goBlendingSystem = Instantiate(blendingSystem);
+                DontDestroyOnLoad(goBlendingSystem);
+            }
 
             var goParameterSystem = new GameObject("Scene Parameter System");
             goParameterSystem.AddComponent<SceneParameterSystem>();
