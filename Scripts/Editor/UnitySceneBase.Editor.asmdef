@@ -1,0 +1,21 @@
+{
+    "name": "UnitySceneBase.Editor",
+    "rootNamespace": "UnitySceneBase.Editor",
+    "references": [
+        "GUID:e13cddd4b5df70e48add7fb8c6d723a8",
+        "GUID:5d0595cabca3f65418ec01a472735d07",
+        "GUID:626cca1954403c942aaa892ce194af26",
+        "GUID:ea566e9c198a99d47a365201dac6d31c"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
