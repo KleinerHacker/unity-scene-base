@@ -1,8 +1,14 @@
 using System;
+using System.Linq;
+using System.Reflection;
 using UnityBlending.Runtime.scene_system.blending.Scripts.Runtime.Components;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
+using UnityEngine.UI;
+using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
+using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 {
@@ -30,7 +36,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         [SerializeField]
         private float esMoveRepeatDelay = 0.5f;
-        
+
         [SerializeField]
         private float esMoveRepeatRate = 0.1f;
 
@@ -55,12 +61,15 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         [SerializeField]
         private bool useBlendCallbacks;
-        
+
         [SerializeField]
         private bool useSwitchCallbacks = true;
 
         [SerializeField]
         private GameObjectItem[] additionalGameObjects;
+
+        [SerializeField]
+        private ScriptableObject[] parameterInitialData = new ScriptableObject[0];
 
         #endregion
 
@@ -100,9 +109,35 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         public GameObjectItem[] AdditionalGameObjects => additionalGameObjects;
 
+        public ScriptableObject[] ParameterInitialData => parameterInitialData;
+
+        #endregion
+
+        #region Builtin Methods
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            foreach (var parameterType in ParameterDataUtils.ParameterTypes)
+            {
+                var attribute = parameterType.GetCustomAttribute<ParameterInitialDataTypeAttribute>();
+                if (attribute == null)
+                    continue;
+                
+                if (ParameterInitialData.Select(x => x.GetType()).Contains(attribute.Type))
+                    continue;
+                
+                var scriptableObject = CreateInstance(attribute.Type);
+                AssetDatabase.CreateAsset(scriptableObject, "Assets/Resources/" + parameterType.Name + ".asset");
+
+                parameterInitialData = parameterInitialData.Append(scriptableObject).ToArray();
+            }
+        }
+#endif
+        
         #endregion
     }
-    
+
     [Serializable]
     public abstract class SceneItemBase
     {
@@ -111,12 +146,27 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         [SerializeField]
         private string identifier;
 
+        [SerializeField]
+        private string parameterDataType = typeof(ParameterData).FullName;
+
+        [SerializeField]
+        private bool parameterDataAllowNull = true;
+
+        [SerializeField]
+        private bool neverUnload;
+
         #endregion
 
         #region Properties
 
         public string Identifier => identifier;
-        
+
+        public string ParameterDataType => parameterDataType;
+
+        public bool ParameterDataAllowNull => parameterDataAllowNull;
+
+        public bool NeverUnload => neverUnload;
+
         public abstract string[] Scenes { get; }
 
         #endregion

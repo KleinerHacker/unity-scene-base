@@ -1,11 +1,17 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 {
-    public sealed class ParameterData
+    public class ParameterData
     {
         private readonly IDictionary<string, object> _data = new Dictionary<string, object>();
+
+        public virtual void InitializeData(ScriptableObject initData)
+        {
+            //Empty
+        }
 
         public void Add<T>(string key, T value, bool overwrite = true)
         {
@@ -28,7 +34,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
         {
             if (mustExists && !Exists(key))
                 throw new InvalidOperationException("The key " + key + " is not contained in " + nameof(ParameterData));
-            
+
             if (!Exists(key))
                 return;
 
@@ -48,10 +54,24 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 
         internal void Update(ParameterData parameterData, bool overwrite = true)
         {
+            if (parameterData == null)
+                return;
+
             foreach (var item in parameterData._data)
             {
                 Add(item.Key, item.Value, overwrite);
             }
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ParameterInitialDataTypeAttribute : Attribute
+    {
+        public Type Type { get; }
+
+        public ParameterInitialDataTypeAttribute(Type type)
+        {
+            Type = type;
         }
     }
 }

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditorEx.Editor.editor_ex.Scripts.Editor;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -12,7 +13,7 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         #region Properties
 
         protected abstract SerializedObject Settings { get; }
-        
+
         protected abstract bool HasAnyEmptyIdentifier { get; }
         protected abstract bool HasAnyDoubleIdentifier { get; }
 
@@ -36,9 +37,11 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         private SerializedProperty _useBlendCallbacksProperty;
         private SerializedProperty _useSwitchCallbacksProperty;
         private SerializedProperty _additionalGameObjectsProperty;
+        private SerializedProperty _parameterInitialDataProperty;
 
-        private bool _foldEventSystem; 
-            
+        private bool _foldEventSystem;
+        private readonly IDictionary<string, bool> _foldInitData = new Dictionary<string, bool>();
+
         private ReorderableList _sceneItemList;
         private ReorderableList _gameObjectItemList;
 
@@ -69,6 +72,7 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
             _useBlendCallbacksProperty = _settings.FindProperty("useBlendCallbacks");
             _useSwitchCallbacksProperty = _settings.FindProperty("useSwitchCallbacks");
             _additionalGameObjectsProperty = _settings.FindProperty("additionalGameObjects");
+            _parameterInitialDataProperty = _settings.FindProperty("parameterInitialData");
 
             _sceneItemList = CreateItemList(_settings, _itemsProperty);
             _gameObjectItemList = new GameObjectItemList(_settings, _additionalGameObjectsProperty);
@@ -80,10 +84,9 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
 
             EditorGUILayout.PropertyField(_useSystemProperty, new GUIContent("Use System"));
             EditorGUILayout.Space();
-            
+
             EditorGUI.BeginDisabledGroup(!_useSystemProperty.boolValue);
             {
-
                 if (HasAnyEmptyIdentifier)
                 {
                     EditorGUILayout.HelpBox("There are identifiers with no content", MessageType.Warning);
@@ -130,14 +133,45 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
                 EditorGUILayout.LabelField("Scene Events", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(_useBlendCallbacksProperty, new GUIContent("Use Blending Callback Events", "Use callback events with attribute " + nameof(RuntimeOnBlendSceneAttribute)));
                 EditorGUILayout.PropertyField(_useSwitchCallbacksProperty, new GUIContent("Use Scene Switch Callback Events", "Use callback events with attribute " + nameof(RuntimeOnSwitchSceneAttribute)));
-                
+
                 EditorGUILayout.Space();
                 EditorGUILayout.LabelField("Additional custom game objects", EditorStyles.boldLabel);
                 _gameObjectItemList.DoLayoutList();
+
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Initial Data for Parameters", EditorStyles.boldLabel);
+                for (var i = 0; i < _parameterInitialDataProperty.arraySize; i++)
+                {
+                    var parameterInitData = _parameterInitialDataProperty.GetArrayElementAtIndex(i);
+                    DrawParameterInitialDataSection(parameterInitData);
+                }
             }
             EditorGUI.EndDisabledGroup();
 
             _settings.ApplyModifiedProperties();
+        }
+
+        private void DrawParameterInitialDataSection(SerializedProperty parameterInitData)
+        {
+            var scriptableObject = (ScriptableObject)parameterInitData.objectReferenceValue;
+            var name = scriptableObject.name;
+
+            if (!_foldInitData.ContainsKey(name))
+            {
+                _foldInitData.Add(name, false);
+            }
+
+            EditorGUILayout.Space();
+            _foldInitData[name] = EditorGUILayout.BeginFoldoutHeaderGroup(_foldInitData[name], name);
+            if (_foldInitData[name])
+            {
+                EditorGUI.indentLevel = 1;
+                UnityEditor.Editor editor = null;
+                UnityEditor.Editor.CreateCachedEditor(scriptableObject, null, ref editor);
+                editor.OnInspectorGUI();
+                EditorGUI.indentLevel = 0;
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
         protected abstract ReorderableList CreateItemList(SerializedObject settings, SerializedProperty itemsProperty);
