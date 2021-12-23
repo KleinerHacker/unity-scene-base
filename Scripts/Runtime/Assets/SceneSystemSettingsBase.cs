@@ -59,6 +59,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         [SerializeField]
         private bool useSwitchCallbacks = true;
 
+        [SerializeField]
+        private GameObjectItem[] additionalGameObjects;
+
         #endregion
 
         #region Properties
@@ -95,6 +98,8 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         public bool UseSwitchCallbacks => useSwitchCallbacks;
 
+        public GameObjectItem[] AdditionalGameObjects => additionalGameObjects;
+
         #endregion
     }
     
@@ -113,6 +118,28 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         public string Identifier => identifier;
         
         public abstract string[] Scenes { get; }
+
+        #endregion
+    }
+
+    [Serializable]
+    public sealed class GameObjectItem
+    {
+        #region Inspector Data
+
+        [SerializeField]
+        private string objectName;
+
+        [SerializeField]
+        private GameObject prefab;
+
+        #endregion
+
+        #region Properties
+
+        public string ObjectName => objectName;
+
+        public GameObject Prefab => prefab;
 
         #endregion
     }

@@ -20,7 +20,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
     {
         #region Static Area
 
-        protected static void LoadSceneSystemBasics(GameObject blendingSystem, bool createES, Action<EventSystem> updateES, Action<InputSystemUIInputModule> updateIM)
+        protected static void LoadSceneSystemBasics(GameObject blendingSystem, GameObjectItem[] items, bool createES, Action<EventSystem> updateES, Action<InputSystemUIInputModule> updateIM)
         {
             Debug.Log("Loading scene system basics");
 
@@ -42,6 +42,27 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 var inputModule = goEventSystem.AddComponent<InputSystemUIInputModule>();
                 updateIM(inputModule);
                 DontDestroyOnLoad(goEventSystem);
+            }
+
+            if (items != null && items.Length > 0)
+            {
+                var parentGo = new GameObject("Additional Game Objects");
+                DontDestroyOnLoad(parentGo);
+                foreach (var item in items)
+                {
+                    if (item.Prefab == null)
+                    {
+                        var go = new GameObject(string.IsNullOrWhiteSpace(item.ObjectName) ? "<game object>" : item.ObjectName);
+                        go.transform.SetParent(parentGo.transform);
+                        DontDestroyOnLoad(go);
+                    }
+                    else
+                    {
+                        var go = Instantiate(item.Prefab, parentGo.transform, true);
+                        go.name = item.ObjectName;
+                        DontDestroyOnLoad(go);
+                    }
+                }
             }
         }
 

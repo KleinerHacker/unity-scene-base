@@ -35,10 +35,12 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         private SerializedProperty _esXROriginProperty;
         private SerializedProperty _useBlendCallbacksProperty;
         private SerializedProperty _useSwitchCallbacksProperty;
+        private SerializedProperty _additionalGameObjectsProperty;
 
         private bool _foldEventSystem; 
             
         private ReorderableList _sceneItemList;
+        private ReorderableList _gameObjectItemList;
 
         protected SceneSettingsProviderBase(string path, IEnumerable<string> keywords = null) : base(path, SettingsScope.Project, keywords)
         {
@@ -66,8 +68,10 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
             _esXROriginProperty = _settings.FindProperty("esXROrigin");
             _useBlendCallbacksProperty = _settings.FindProperty("useBlendCallbacks");
             _useSwitchCallbacksProperty = _settings.FindProperty("useSwitchCallbacks");
+            _additionalGameObjectsProperty = _settings.FindProperty("additionalGameObjects");
 
             _sceneItemList = CreateItemList(_settings, _itemsProperty);
+            _gameObjectItemList = new GameObjectItemList(_settings, _additionalGameObjectsProperty);
         }
 
         public override void OnGUI(string searchContext)
@@ -126,6 +130,10 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
                 EditorGUILayout.LabelField("Scene Events", EditorStyles.boldLabel);
                 EditorGUILayout.PropertyField(_useBlendCallbacksProperty, new GUIContent("Use Blending Callback Events", "Use callback events with attribute " + nameof(RuntimeOnBlendSceneAttribute)));
                 EditorGUILayout.PropertyField(_useSwitchCallbacksProperty, new GUIContent("Use Scene Switch Callback Events", "Use callback events with attribute " + nameof(RuntimeOnSwitchSceneAttribute)));
+                
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField("Additional custom game objects", EditorStyles.boldLabel);
+                _gameObjectItemList.DoLayoutList();
             }
             EditorGUI.EndDisabledGroup();
 
