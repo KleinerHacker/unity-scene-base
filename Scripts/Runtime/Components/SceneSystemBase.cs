@@ -151,7 +151,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             if (sceneItem == null)
                 throw new InvalidOperationException("Unable to find scene with identifier " + identifier);
 
-            if (!IsAllowNullParameterData(identifier) && parameterData == null)
+            if (parameterData == null && !IsAllowNullParameterData(identifier))
                 throw new InvalidOperationException("Parameter data with NULL value not allowed for " + identifier);
             var parameterDataType = GetAllowedParameterDataType(identifier);
             if (parameterData != null && parameterData.GetType().FullName != parameterDataType)

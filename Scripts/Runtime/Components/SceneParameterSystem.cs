@@ -12,6 +12,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
     {
         internal static void UpdateParameterData(ParameterData parameterData, bool overwrite = true)
         {
+            if (parameterData == null)
+                return;
+            
             var data = Singleton._data;
             if (!data.ContainsKey(parameterData.GetType()))
             {
