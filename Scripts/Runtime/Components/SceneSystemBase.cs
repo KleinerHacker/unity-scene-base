@@ -189,7 +189,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         private void DoLoadAsync(TI sceneItem, Action onFinished, string[] oldScenes)
         {
             StartCoroutine(ChangeScenes(
-                () => RaiseSwitchEvent(RuntimeOnSwitchSceneType.UnloadScenes, sceneItem.Identifier, oldScenes),
+                () => RaiseSwitchEvent(RuntimeOnSwitchSceneType.UnloadScenes, CurrentState, oldScenes),
                 () => RaiseSwitchEvent(RuntimeOnSwitchSceneType.LoadScenes, sceneItem.Identifier, sceneItem.Scenes),
                 () =>
                 {
