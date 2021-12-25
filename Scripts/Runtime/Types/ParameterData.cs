@@ -15,6 +15,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 
         public void Add<T>(string key, T value, bool overwrite = true)
         {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Try to add " + key + " to " + GetType().FullName);
+#endif
+            
             if (!overwrite && Exists(key))
                 throw new InvalidOperationException("The key " + key + " is already contains in " + nameof(ParameterData));
 
@@ -32,6 +36,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 
         public void Remove(string key, bool mustExists = false)
         {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Try to remove " + key + " in " + GetType().FullName);
+#endif
+            
             if (mustExists && !Exists(key))
                 throw new InvalidOperationException("The key " + key + " is not contained in " + nameof(ParameterData));
 
@@ -43,6 +51,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 
         public T Get<T>(string key, bool mustExists = false)
         {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Try to get " + key + " in " + GetType().FullName);
+#endif
+            
             if (mustExists && !Exists(key))
                 throw new InvalidOperationException("The key " + key + " is not contained in " + nameof(ParameterData));
 
@@ -57,6 +69,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
             if (parameterData == null)
                 return;
 
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Update parameter data in " + GetType().FullName);
+#endif
             foreach (var item in parameterData._data)
             {
                 Add(item.Key, item.Value, overwrite);

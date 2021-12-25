@@ -10,20 +10,16 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 {
     public sealed class SceneParameterSystem : SearchingSingletonBehavior<SceneParameterSystem>
     {
-        internal static void UpdateParameterData(ParameterData parameterData, bool overwrite = true)
+        internal static void UpdateParameterData(ParameterData parameterData, ScriptableObject[] scriptableObjects, bool overwrite = true)
         {
             if (parameterData == null)
                 return;
-            
-            var data = Singleton._data;
-            if (!data.ContainsKey(parameterData.GetType()))
-            {
-                data.Add(parameterData.GetType(), parameterData);
-            }
-            else
-            {
-                data[parameterData.GetType()].Update(parameterData, overwrite);
-            }
+
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Update parameter data");
+#endif
+            var parameter = GetData(parameterData.GetType(), scriptableObjects);
+            parameter.Update(parameterData, overwrite);
         }
 
         public static bool HasData<T>() where T : ParameterData
@@ -33,17 +29,39 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         public static T GetData<T>(ScriptableObject[] scriptableObjects) where T : ParameterData
         {
+            return (T)GetData(typeof(T), scriptableObjects);
+        }
+
+        public static ParameterData GetData(Type type, ScriptableObject[] scriptableObjects)
+        {
+            if (!typeof(ParameterData).IsAssignableFrom(type))
+                throw new ArgumentException("Type " + type.FullName + " is not a " + nameof(ParameterData) + " type");
+            
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Try to get data of type " + type.FullName);
+#endif
+
             var data = Singleton._data;
-            if (!data.ContainsKey(typeof(T)))
+            if (!data.ContainsKey(type))
             {
-                var parameterData = (T) typeof(T).GetConstructor(Type.EmptyTypes).Invoke(Array.Empty<object>());
-                var attribute = typeof(T).GetCustomAttribute<ParameterInitialDataTypeAttribute>();
+#if SCENE_VERBOSE
+                Debug.Log("[SceneSystem] ... data not found, create new for type " + type.FullName);
+#endif
+                
+                var parameterData = (ParameterData)type.GetConstructor(Type.EmptyTypes).Invoke(Array.Empty<object>());
+                var attribute = type.GetCustomAttribute<ParameterInitialDataTypeAttribute>();
                 if (attribute == null)
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] No initial data found for type " + type.FullName);
+#endif
                     parameterData.InitializeData(null);
                 }
                 else
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Initialize data for type " + type.FullName);
+#endif
                     var scriptableObject = scriptableObjects.FirstOrDefault(x => x.GetType() == attribute.Type);
                     parameterData.InitializeData(scriptableObject);
                 }
@@ -51,7 +69,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 return parameterData;
             }
 
-            return (T)data[typeof(T)];
+            return data[type];
         }
 
         private readonly IDictionary<Type, ParameterData> _data = new Dictionary<Type, ParameterData>();

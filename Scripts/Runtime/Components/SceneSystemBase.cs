@@ -16,7 +16,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    public abstract class SceneSystemBase<T,TI> : SearchingSingletonBehavior<T> where T : SceneSystemBase<T,TI> where TI : SceneItemBase
+    public abstract class SceneSystemBase<T, TI> : SearchingSingletonBehavior<T> where T : SceneSystemBase<T, TI> where TI : SceneItemBase
     {
         #region Static Area
 
@@ -67,20 +67,20 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         }
 
         #endregion
-        
+
         #region Properties
 
         protected abstract bool UseBlendCallbacks { get; }
         protected abstract bool UseSwitchCallbacks { get; }
         protected abstract SceneBlendState StartupBlendState { get; }
-        
+
         public string CurrentState { get; private set; }
 
         #endregion
-        
+
         private IDictionary<RuntimeOnBlendSceneType, List<MethodInfo>> _blendCallbacks;
         private IDictionary<RuntimeOnSwitchSceneType, List<MethodInfo>> _switchCallbacks;
-        
+
         protected BlendingSystem _blending;
 
         #region Builtin Methods
@@ -108,11 +108,11 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                     .GroupBy(x => x.GetCustomAttribute<RuntimeOnSwitchSceneAttribute>().Type)
                     .ToDictionary(x => x.Key, x => x.ToList());
             }
-            
+
             _blending = FindObjectOfType<BlendingSystem>();
             if (_blending == null)
                 throw new InvalidOperationException("Unable to find " + nameof(BlendingSystem));
-            
+
             switch (StartupBlendState)
             {
                 case SceneBlendState.Shown:
@@ -129,7 +129,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         }
 
         #endregion
-        
+
         public void Load(string identifier, ParameterData parameterData = null, bool overwrite = true)
         {
             Load(identifier, false, parameterData, overwrite);
@@ -145,8 +145,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             Load(identifier, false, onFinished, parameterData, overwrite);
         }
 
-        public void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData = null, bool overwrite = true)
+        public abstract void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData = null, bool overwrite = true);
+
+        protected void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData, bool overwrite, ScriptableObject[] scriptableObjects)
         {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Load scene(s) for " + identifier + " with parameter data " + parameterData);
+#endif
+
             var sceneItem = FindSceneItem(identifier);
             if (sceneItem == null)
                 throw new InvalidOperationException("Unable to find scene with identifier " + identifier);
@@ -157,10 +163,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             if (parameterData != null && parameterData.GetType().FullName != parameterDataType)
                 throw new InvalidOperationException("Parameter data must of type " + parameterDataType + " for " + identifier);
 
-            SceneParameterSystem.UpdateParameterData(parameterData, overwrite);
+            SceneParameterSystem.UpdateParameterData(parameterData, scriptableObjects, overwrite);
             Load(sceneItem, onFinished, doNotUnload);
         }
-        
+
         #region Loader Methods
 
         private void Load(TI sceneItem, Action onFinished = null, bool doNotUnload = false)
@@ -200,7 +206,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                             RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
                             {
                                 CurrentState = sceneItem.Identifier;
-                                onFinished?.Invoke(); 
+                                onFinished?.Invoke();
                             });
                         });
                     });
@@ -209,23 +215,39 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         }
 
         #endregion
-        
+
         protected IEnumerator ChangeScenes(Func<string[]> oldScenesGetter, Func<string[]> newScenesGetter, Action onFinished)
         {
             var oldScenes = oldScenesGetter();
-            if (oldScenes != null && oldScenes.Length > 0)
+            //If all scenes must unload (this is not be able cause one scene must exists anymore). In this case a complete reload is required.
+            var requiresCompleteLoad = (oldScenes?.Length ?? 0) >= SceneManager.sceneCount;
+            if (!requiresCompleteLoad)
             {
-                foreach (var oldScene in oldScenes)
+                if (oldScenes != null && oldScenes.Length > 0)
                 {
-                    SceneManager.UnloadSceneAsync(oldScene, UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
+                    foreach (var oldScene in oldScenes)
+                    {
+                        SceneManager.UnloadSceneAsync(oldScene, UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
+                    }
                 }
             }
 
             var newScenes = newScenesGetter();
             var operations = new List<AsyncOperation>();
-            foreach (var newScene in newScenes)
+            for (var i = 0; i < newScenes.Length; i++)
             {
-                var operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
+                var newScene = newScenes[i];
+
+                AsyncOperation operation;
+                if (requiresCompleteLoad && i == 0)
+                {
+                    operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Single);
+                }
+                else
+                {
+                    operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
+                }
+
                 operation.allowSceneActivation = false;
                 operation.completed += _ => SceneManager.SetActiveScene(SceneManager.GetSceneByPath(newScenes[0]));
 
@@ -252,15 +274,21 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
             onFinished?.Invoke();
         }
-        
+
         protected virtual void RaiseBlendEvent(RuntimeOnBlendSceneType type, string identifier, Action asyncAction)
         {
             if (!UseBlendCallbacks || _blendCallbacks == null || !_blendCallbacks.ContainsKey(type) || _blendCallbacks[type].Count <= 0)
             {
+#if SCENE_VERBOSE
+                Debug.Log("[SceneSystem] No blend events found in game, " + type + " for " + identifier);
+#endif
                 asyncAction?.Invoke();
                 return;
             }
 
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Raise blend events " + type + " for " + identifier);
+#endif
             var counter = new Decrementing(_blendCallbacks[type].Count);
             foreach (var methodInfo in _blendCallbacks[type])
             {
@@ -272,8 +300,16 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         protected virtual string[] RaiseSwitchEvent(RuntimeOnSwitchSceneType type, string identifier, string[] scenes)
         {
             if (!UseSwitchCallbacks || _switchCallbacks == null || !_switchCallbacks.ContainsKey(type) || _switchCallbacks[type].Count <= 0)
+            {
+#if SCENE_VERBOSE
+                Debug.Log("[SceneSystem] No scene switch events found in game, " + type + " for " + identifier);
+#endif
                 return scenes;
+            }
 
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Raise scene switch events " + type + " for " + identifier);
+#endif
             var result = new List<string>(scenes);
             foreach (var methodInfo in _switchCallbacks[type])
             {

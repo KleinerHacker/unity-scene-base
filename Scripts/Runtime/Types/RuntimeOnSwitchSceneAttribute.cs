@@ -32,6 +32,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
         /// Scenes to load / unload
         /// </summary>
         public string[] Scenes { get; }
+
         /// <summary>
         /// Additional scenes to load / unload
         /// </summary>

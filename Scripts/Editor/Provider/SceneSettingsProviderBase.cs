@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.Linq;
+using UnityCommonEx.Runtime.common_ex.Scripts.Runtime.Utils.Extensions;
 using UnityEditor;
-using UnityEditorEx.Editor.editor_ex.Scripts.Editor;
+using UnityEditor.Build;
 using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Utils;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
@@ -82,7 +85,11 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         {
             _settings.Update();
 
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.PropertyField(_useSystemProperty, new GUIContent("Use System"));
+            EditorGUILayoutEx.SceneVerbose(new GUIContent("Verbose Logging"));
+
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
             EditorGUI.BeginDisabledGroup(!_useSystemProperty.boolValue);
@@ -171,6 +178,7 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
                 editor.OnInspectorGUI();
                 EditorGUI.indentLevel = 0;
             }
+
             EditorGUILayout.EndFoldoutHeaderGroup();
         }
 
