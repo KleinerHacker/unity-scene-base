@@ -221,10 +221,16 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             var oldScenes = oldScenesGetter();
             //If all scenes must unload (this is not be able cause one scene must exists anymore). In this case a complete reload is required.
             var requiresCompleteLoad = (oldScenes?.Length ?? 0) >= SceneManager.sceneCount;
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Change scene requires complete reload? " + requiresCompleteLoad);
+#endif
             if (!requiresCompleteLoad)
             {
                 if (oldScenes != null && oldScenes.Length > 0)
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Unload scenes: " + string.Join(',', oldScenes));
+#endif
                     foreach (var oldScene in oldScenes)
                     {
                         SceneManager.UnloadSceneAsync(oldScene, UnloadSceneOptions.UnloadAllEmbeddedSceneObjects);
@@ -233,6 +239,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             }
 
             var newScenes = newScenesGetter();
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Load scenes: " + string.Join(',', newScenes));
+#endif
             var operations = new List<AsyncOperation>();
             for (var i = 0; i < newScenes.Length; i++)
             {
@@ -241,10 +250,16 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 AsyncOperation operation;
                 if (requiresCompleteLoad && i == 0)
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Load first scene as single");
+#endif
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Single);
                 }
                 else
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Load scene as additive");
+#endif
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
                 }
 
@@ -254,7 +269,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 operations.Add(operation);
             }
 
-
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Wait for scene loading");
+#endif
             while (!operations.IsReady())
             {
                 _blending.LoadingProgress = operations.CalculateProgress();
@@ -266,12 +283,18 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 operation.allowSceneActivation = true;
             }
 
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Wait for scene is done");
+#endif
             while (!operations.IsDone())
             {
                 _blending.LoadingProgress = operations.CalculateProgress();
                 yield return null;
             }
 
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Scene loading finished");
+#endif
             onFinished?.Invoke();
         }
 
