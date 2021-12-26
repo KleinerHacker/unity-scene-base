@@ -111,20 +111,24 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
             _blending = FindObjectOfType<BlendingSystem>();
             if (_blending == null)
-                throw new InvalidOperationException("Unable to find " + nameof(BlendingSystem));
-
-            switch (StartupBlendState)
             {
-                case SceneBlendState.Shown:
-                    Debug.Log("Start with shown blend");
-                    _blending.ShowBlendImmediately();
-                    break;
-                case SceneBlendState.Hidden:
-                    Debug.Log("Start with hidden blend");
-                    _blending.HideBlendImmediately();
-                    break;
-                default:
-                    throw new NotImplementedException();
+                Debug.LogWarning("[SceneSystem] Unable to find blending system. Game uses no blending between scenes!");
+            }
+            else
+            {
+                switch (StartupBlendState)
+                {
+                    case SceneBlendState.Shown:
+                        Debug.Log("Start with shown blend");
+                        _blending.ShowBlendImmediately();
+                        break;
+                    case SceneBlendState.Hidden:
+                        Debug.Log("Start with hidden blend");
+                        _blending.HideBlendImmediately();
+                        break;
+                    default:
+                        throw new NotImplementedException();
+                }
             }
         }
 
@@ -184,11 +188,19 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
             RaiseBlendEvent(RuntimeOnBlendSceneType.PreShowBlend, sceneItem.Identifier, () =>
             {
-                _blending.ShowBlend(() =>
+                if (_blending != null)
+                {
+                    _blending.ShowBlend(() =>
+                    {
+                        RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
+                            () => DoLoadAsync(sceneItem, onFinished, oldScenes?.ToArray()));
+                    });
+                }
+                else
                 {
                     RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
                         () => DoLoadAsync(sceneItem, onFinished, oldScenes?.ToArray()));
-                });
+                }
             });
         }
 
@@ -201,14 +213,25 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 {
                     RaiseBlendEvent(RuntimeOnBlendSceneType.PreHideBlend, sceneItem.Identifier, () =>
                     {
-                        _blending.HideBlend(() =>
+                        if (_blending != null)
+                        {
+                            _blending.HideBlend(() =>
+                            {
+                                RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
+                                {
+                                    CurrentState = sceneItem.Identifier;
+                                    onFinished?.Invoke();
+                                });
+                            });
+                        }
+                        else
                         {
                             RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
                             {
                                 CurrentState = sceneItem.Identifier;
                                 onFinished?.Invoke();
                             });
-                        });
+                        }
                     });
                 }
             ));
@@ -273,41 +296,72 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Wait for first scene is loaded completely");
 #endif
-                    while (!operation.IsReady())
-                    {
-                        _blending.LoadingProgress = operations.CalculateProgress();
-                        yield return null;
-                    }
+                    var waitForReadySingle = WaitForReady(operations);
+                    while (waitForReadySingle.MoveNext()) yield return waitForReadySingle.Current;
+
+                    operation.allowSceneActivation = true;
+
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Wait for first scene is done");
+#endif
+                    var waitForDoneSingle = WaitForDone(operations);
+                    while (waitForDoneSingle.MoveNext()) yield return waitForDoneSingle.Current;
                 }
             }
 
-#if SCENE_VERBOSE
-            Debug.Log("[SceneSystem] Wait for scene loading");
-#endif
-            while (!operations.IsReady())
-            {
-                _blending.LoadingProgress = operations.CalculateProgress();
-                yield return null;
-            }
+            var waitForReady = WaitForReady(operations);
+            while (waitForReady.MoveNext()) yield return waitForReady.Current;
 
             foreach (var operation in operations)
             {
                 operation.allowSceneActivation = true;
             }
 
-#if SCENE_VERBOSE
-            Debug.Log("[SceneSystem] Wait for scene is done");
-#endif
-            while (!operations.IsDone())
-            {
-                _blending.LoadingProgress = operations.CalculateProgress();
-                yield return null;
-            }
+            var waitForDone = WaitForDone(operations);
+            while (waitForDone.MoveNext()) yield return waitForDone.Current;
 
 #if SCENE_VERBOSE
             Debug.Log("[SceneSystem] Scene loading finished");
 #endif
             onFinished?.Invoke();
+        }
+
+        private IEnumerator WaitForReady(List<AsyncOperation> operations)
+        {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Wait for scene loading");
+#endif
+            while (!operations.IsReady())
+            {
+#if SCENE_VERBOSE
+                Debug.Log("[SceneSystem] State: " + operations.CalculateProgress() + " -> " + string.Join('|', operations.Select(x => x.progress)));
+#endif
+                if (_blending != null)
+                {
+                    _blending.LoadingProgress = operations.CalculateProgress();
+                }
+
+                yield return null;
+            }
+        }
+
+        private IEnumerator WaitForDone(List<AsyncOperation> operations)
+        {
+#if SCENE_VERBOSE
+            Debug.Log("[SceneSystem] Wait for scene is done");
+#endif
+            while (!operations.IsDone())
+            {
+#if SCENE_VERBOSE
+                Debug.Log("[SceneSystem] State: " + operations.CalculateProgress() + " -> " + string.Join('|', operations.Select(x => x.progress)));
+#endif
+                if (_blending != null)
+                {
+                    _blending.LoadingProgress = operations.CalculateProgress();
+                }
+
+                yield return null;
+            }
         }
 
         protected virtual void RaiseBlendEvent(RuntimeOnBlendSceneType type, string identifier, Action asyncAction)
