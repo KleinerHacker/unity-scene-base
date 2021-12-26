@@ -267,6 +267,18 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 operation.completed += _ => SceneManager.SetActiveScene(SceneManager.GetSceneByPath(newScenes[0]));
 
                 operations.Add(operation);
+
+                if (requiresCompleteLoad && i == 0)
+                {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Wait for first scene is loaded completely");
+#endif
+                    while (!operation.IsReady())
+                    {
+                        _blending.LoadingProgress = operations.CalculateProgress();
+                        yield return null;
+                    }
+                }
             }
 
 #if SCENE_VERBOSE

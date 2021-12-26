@@ -124,11 +124,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
                 if (attribute == null)
                     continue;
                 
-                if (ParameterInitialData.Select(x => x.GetType()).Contains(attribute.Type))
+                if (parameterInitialData.Select(x => x.GetType()).Contains(attribute.Type))
                     continue;
                 
                 var scriptableObject = CreateInstance(attribute.Type);
                 AssetDatabase.CreateAsset(scriptableObject, "Assets/Resources/" + parameterType.Name + ".asset");
+                
+                if (parameterInitialData.Select(x => x.GetType()).Contains(scriptableObject.GetType()))
+                    continue;
 
                 parameterInitialData = parameterInitialData.Append(scriptableObject).ToArray();
             }
