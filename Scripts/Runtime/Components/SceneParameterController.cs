@@ -8,7 +8,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    public sealed class SceneParameterSystem : SearchingSingletonBehavior<SceneParameterSystem>
+    public sealed class SceneParameterController : SearchingSingletonBehavior<SceneParameterController>
     {
         internal static void UpdateParameterData(ParameterData parameterData, ScriptableObject[] scriptableObjects, bool overwrite = true)
         {

@@ -69,7 +69,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         private GameObjectItem[] additionalGameObjects;
 
         [SerializeField]
-        private ScriptableObject[] parameterInitialData = new ScriptableObject[0];
+        private ScriptableObject[] parameterInitialData = Array.Empty<ScriptableObject>();
 
         #endregion
 
@@ -116,6 +116,11 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         #region Builtin Methods
 
 #if UNITY_EDITOR
+        private void Awake()
+        {
+            OnValidate();
+        }
+
         private void OnValidate()
         {
             foreach (var parameterType in ParameterDataUtils.ParameterTypes)
@@ -124,11 +129,16 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
                 if (attribute == null)
                     continue;
                 
-                if (parameterInitialData.Select(x => x.name).Contains(parameterType.Name))
+                if (parameterInitialData.Select(x => x.name).Any(x => string.Equals(x,parameterType.Name, StringComparison.OrdinalIgnoreCase)))
                     continue;
                 
-                var scriptableObject = CreateInstance(attribute.Type);
-                AssetDatabase.CreateAsset(scriptableObject, "Assets/Resources/" + parameterType.Name + ".asset");
+                var assetName = "Assets/Resources/" + parameterType.Name + ".asset";
+                var scriptableObject = AssetDatabase.LoadAssetAtPath<ScriptableObject>(assetName);
+                if (scriptableObject == null)
+                {
+                    scriptableObject = CreateInstance(attribute.Type);
+                    AssetDatabase.CreateAsset(scriptableObject, assetName);
+                }
 
                 parameterInitialData = parameterInitialData.Append(scriptableObject).ToArray();
             }

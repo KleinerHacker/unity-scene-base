@@ -16,7 +16,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    public abstract class SceneSystemBase<T, TI> : SearchingSingletonBehavior<T> where T : SceneSystemBase<T, TI> where TI : SceneItemBase
+    public abstract class SceneControllerBase<T, TI> : SearchingSingletonBehavior<T> where T : SceneControllerBase<T, TI> where TI : SceneItemBase
     {
         #region Static Area
 
@@ -31,7 +31,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             }
 
             var goParameterSystem = new GameObject("Scene Parameter System");
-            goParameterSystem.AddComponent<SceneParameterSystem>();
+            goParameterSystem.AddComponent<SceneParameterController>();
             DontDestroyOnLoad(goParameterSystem);
 
             if (createES)
@@ -167,7 +167,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             if (parameterData != null && parameterData.GetType().FullName != parameterDataType)
                 throw new InvalidOperationException("Parameter data must of type " + parameterDataType + " for " + identifier);
 
-            SceneParameterSystem.UpdateParameterData(parameterData, scriptableObjects, overwrite);
+            SceneParameterController.UpdateParameterData(parameterData, scriptableObjects, overwrite);
             Load(sceneItem, onFinished, doNotUnload);
         }
 
