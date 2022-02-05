@@ -1,4 +1,6 @@
 using System;
+using UnityBlending.Runtime.scene_system.blending.Scripts.Runtime.Components;
+using UnityEngine;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 {
@@ -34,11 +36,21 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
         /// Callback to continue loading scene. <b>Must call from method, otherwise system stocks!</b>
         /// </summary>
         public Action Callback { get; }
+        /// <summary>
+        /// Behavior to use for animation inside callback
+        /// </summary>
+        public MonoBehaviour AnimationBehavior { get; }
+        /// <summary>
+        /// Blending system is worked on
+        /// </summary>
+        public BlendingSystem BlendingSystem { get; }
 
-        internal RuntimeOnBlendSceneArgs(string identifier, Action callback)
+        internal RuntimeOnBlendSceneArgs(string identifier, Action callback, MonoBehaviour animationBehavior, BlendingSystem blendingSystem)
         {
             Identifier = identifier;
             Callback = callback;
+            AnimationBehavior = animationBehavior;
+            BlendingSystem = blendingSystem;
         }
     }
 }

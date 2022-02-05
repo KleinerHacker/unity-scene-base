@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 {
@@ -32,16 +33,21 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
         /// Scenes to load / unload
         /// </summary>
         public string[] Scenes { get; }
+        /// <summary>
+        /// Behavior to use for animation inside callback
+        /// </summary>
+        public MonoBehaviour AnimationBehaviour { get; }
 
         /// <summary>
         /// Additional scenes to load / unload
         /// </summary>
         public string[] AdditionalScenes { get; set; }
 
-        internal RuntimeOnSwitchSceneArgs(string identifier, string[] scenes)
+        internal RuntimeOnSwitchSceneArgs(string identifier, string[] scenes, MonoBehaviour animationBehaviour)
         {
             Identifier = identifier;
             Scenes = scenes;
+            AnimationBehaviour = animationBehaviour;
             AdditionalScenes = Array.Empty<string>();
         }
     }

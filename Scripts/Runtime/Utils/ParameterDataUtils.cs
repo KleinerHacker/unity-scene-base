@@ -4,7 +4,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils
 {
-    public static class ParameterDataUtils
+    internal static class ParameterDataUtils
     {
         public static Type[] ParameterTypes { get; }
 

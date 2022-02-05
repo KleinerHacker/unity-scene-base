@@ -2,9 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityBlending.Runtime.scene_system.blending.Scripts.Runtime.Components;
 using UnityCommonEx.Runtime.common_ex.Scripts.Runtime.Utils;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -13,6 +13,7 @@ using UnityExtension.Runtime.extension.Scripts.Runtime.Components;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Utils.Extensions;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
+using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
@@ -20,7 +21,8 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
     {
         #region Static Area
 
-        protected static void LoadSceneSystemBasics(GameObject blendingSystem, GameObjectItem[] items, bool createES, Action<EventSystem> updateES, Action<InputSystemUIInputModule> updateIM)
+        protected static void LoadSceneSystemBasics(GameObject blendingSystem, GameObjectItem[] items, bool createES, Action<EventSystem> updateES,
+            Action<InputSystemUIInputModule> updateIM)
         {
             Debug.Log("Loading scene system basics");
 
@@ -78,37 +80,12 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         #endregion
 
-        private IDictionary<RuntimeOnBlendSceneType, List<MethodInfo>> _blendCallbacks;
-        private IDictionary<RuntimeOnSwitchSceneType, List<MethodInfo>> _switchCallbacks;
-
         protected BlendingSystem _blending;
 
         #region Builtin Methods
 
         protected virtual void Awake()
         {
-            if (UseBlendCallbacks)
-            {
-                Debug.Log("Search for scene system callbacks (blending)");
-                _blendCallbacks = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(x => x.GetTypes())
-                    .SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.Static))
-                    .Where(x => x.GetCustomAttribute<RuntimeOnBlendSceneAttribute>() != null)
-                    .GroupBy(x => x.GetCustomAttribute<RuntimeOnBlendSceneAttribute>().Type)
-                    .ToDictionary(x => x.Key, x => x.ToList());
-            }
-
-            if (UseSwitchCallbacks)
-            {
-                Debug.Log("Search for scene system callbacks (switch)");
-                _switchCallbacks = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(x => x.GetTypes())
-                    .SelectMany(x => x.GetMethods(BindingFlags.Public | BindingFlags.Static))
-                    .Where(x => x.GetCustomAttribute<RuntimeOnSwitchSceneAttribute>() != null)
-                    .GroupBy(x => x.GetCustomAttribute<RuntimeOnSwitchSceneAttribute>().Type)
-                    .ToDictionary(x => x.Key, x => x.ToList());
-            }
-
             _blending = FindObjectOfType<BlendingSystem>();
             if (_blending == null)
             {
@@ -151,7 +128,8 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         public abstract void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData = null, bool overwrite = true);
 
-        protected void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData, bool overwrite, ScriptableObject[] scriptableObjects)
+        protected void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData, bool overwrite,
+            ScriptableObject[] scriptableObjects)
         {
 #if SCENE_VERBOSE
             Debug.Log("[SceneSystem] Load scene(s) for " + identifier + " with parameter data " + parameterData);
@@ -207,8 +185,8 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         private void DoLoadAsync(TI sceneItem, Action onFinished, string[] oldScenes)
         {
             StartCoroutine(ChangeScenes(
-                () => RaiseSwitchEvent(RuntimeOnSwitchSceneType.UnloadScenes, CurrentState, oldScenes),
-                () => RaiseSwitchEvent(RuntimeOnSwitchSceneType.LoadScenes, sceneItem.Identifier, sceneItem.Scenes),
+                () => RaiseSceneEvent(RuntimeOnSwitchSceneType.UnloadScenes, CurrentState, oldScenes),
+                () => RaiseSceneEvent(RuntimeOnSwitchSceneType.LoadScenes, sceneItem.Identifier, sceneItem.Scenes),
                 () =>
                 {
                     RaiseBlendEvent(RuntimeOnBlendSceneType.PreHideBlend, sceneItem.Identifier, () =>
@@ -238,6 +216,36 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         }
 
         #endregion
+
+        public void ExitApplication(bool showBlend, Action preExit)
+        {
+            ExitApplication(showBlend, preExit == null ? null : callback =>
+            {
+                preExit.Invoke();
+                callback.Invoke();
+            });
+        }
+
+        public void ExitApplication(bool showBlend, Action<Action> preExit)
+        {
+            if (showBlend)
+            {
+                _blending.ShowBlend(() => preExit?.Invoke(Exit));
+            }
+            else
+            {
+                preExit?.Invoke(Exit);
+            }
+
+            void Exit()
+            {
+#if UNITY_EDITOR
+                EditorApplication.isPlaying = false;
+#else
+                Application.Quit();
+#endif
+            }
+        }
 
         protected IEnumerator ChangeScenes(Func<string[]> oldScenesGetter, Func<string[]> newScenesGetter, Action onFinished)
         {
@@ -366,7 +374,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         protected virtual void RaiseBlendEvent(RuntimeOnBlendSceneType type, string identifier, Action asyncAction)
         {
-            if (!UseBlendCallbacks || _blendCallbacks == null || !_blendCallbacks.ContainsKey(type) || _blendCallbacks[type].Count <= 0)
+            if (!UseBlendCallbacks || !SceneEventUtils.HasBlendingEvents)
             {
 #if SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No blend events found in game, " + type + " for " + identifier);
@@ -378,17 +386,13 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
             Debug.Log("[SceneSystem] Raise blend events " + type + " for " + identifier);
 #endif
-            var counter = new Decrementing(_blendCallbacks[type].Count);
-            foreach (var methodInfo in _blendCallbacks[type])
-            {
-                Action action = () => counter.Try(asyncAction);
-                methodInfo.Invoke(null, new object[] { new RuntimeOnBlendSceneArgs(identifier, action) });
-            }
+            var counter = new Decrementing(SceneEventUtils.GetBlendEventCount(type));
+            SceneEventUtils.RaiseBlendEvent(type, new RuntimeOnBlendSceneArgs(identifier, () => counter.Try(asyncAction), this, _blending));
         }
 
-        protected virtual string[] RaiseSwitchEvent(RuntimeOnSwitchSceneType type, string identifier, string[] scenes)
+        protected virtual string[] RaiseSceneEvent(RuntimeOnSwitchSceneType type, string identifier, string[] scenes)
         {
-            if (!UseSwitchCallbacks || _switchCallbacks == null || !_switchCallbacks.ContainsKey(type) || _switchCallbacks[type].Count <= 0)
+            if (!UseSwitchCallbacks || !SceneEventUtils.HasSceneEvents)
             {
 #if SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No scene switch events found in game, " + type + " for " + identifier);
@@ -400,12 +404,8 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             Debug.Log("[SceneSystem] Raise scene switch events " + type + " for " + identifier);
 #endif
             var result = new List<string>(scenes);
-            foreach (var methodInfo in _switchCallbacks[type])
-            {
-                var args = new RuntimeOnSwitchSceneArgs(identifier, scenes);
-                methodInfo.Invoke(null, new object[] { args });
-                result.AddRange(args.AdditionalScenes);
-            }
+            SceneEventUtils.RaiseSceneEvent(type, new RuntimeOnSwitchSceneArgs(identifier, scenes, this),
+                additionalScenes => result.AddRange(additionalScenes));
 
             return result.ToArray();
         }
