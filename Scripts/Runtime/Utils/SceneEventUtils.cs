@@ -10,8 +10,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils
 {
     internal static class SceneEventUtils
     {
-        public static bool HasSceneEvents => _sceneEvents != null && _sceneEvents.Count > 0 && _sceneEvents.All(x => x.Value.Count > 0);
-        public static bool HasBlendingEvents => _blendEvents != null && _blendEvents.Count > 0 && _blendEvents.All(x => x.Value.Count > 0);
+        public static bool HasAnySceneEvents => _sceneEvents.Count > 0 && _sceneEvents.All(x => x.Value.Count > 0);
+        public static bool HasSceneEvents(RuntimeOnSwitchSceneType type) => _sceneEvents.ContainsKey(type) && _sceneEvents[type].Count > 0;
+        public static bool HasAnyBlendingEvents => _blendEvents.Count > 0 && _blendEvents.All(x => x.Value.Count > 0);
+        public static bool HasBlendingEvents(RuntimeOnBlendSceneType type) => _blendEvents.ContainsKey(type) && _blendEvents[type].Count > 0;
         
         private static readonly IDictionary<RuntimeOnSwitchSceneType, List<MethodInfo>> _sceneEvents;
         private static readonly IDictionary<RuntimeOnBlendSceneType, List<MethodInfo>> _blendEvents;

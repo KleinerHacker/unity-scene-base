@@ -374,7 +374,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         protected virtual void RaiseBlendEvent(RuntimeOnBlendSceneType type, string identifier, Action asyncAction)
         {
-            if (!UseBlendCallbacks || !SceneEventUtils.HasBlendingEvents)
+            if (!UseBlendCallbacks || !SceneEventUtils.HasBlendingEvents(type))
             {
 #if SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No blend events found in game, " + type + " for " + identifier);
@@ -392,7 +392,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         protected virtual string[] RaiseSceneEvent(RuntimeOnSwitchSceneType type, string identifier, string[] scenes)
         {
-            if (!UseSwitchCallbacks || !SceneEventUtils.HasSceneEvents)
+            if (!UseSwitchCallbacks || !SceneEventUtils.HasSceneEvents(type))
             {
 #if SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No scene switch events found in game, " + type + " for " + identifier);

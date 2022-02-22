@@ -1,11 +1,9 @@
 {
     "name": "UnitySceneBase.Editor",
     "rootNamespace": "UnitySceneBase.Editor",
-    "references": [
-        "GUID:e13cddd4b5df70e48add7fb8c6d723a8",
-        "GUID:5d0595cabca3f65418ec01a472735d07",
-        "GUID:626cca1954403c942aaa892ce194af26"
-    ],
+    "references": ["GUID:e13cddd4b5df70e48add7fb8c6d723a8",
+"GUID:5d0595cabca3f65418ec01a472735d07",
+"GUID:626cca1954403c942aaa892ce194af26"],
     "includePlatforms": [
         "Editor"
     ],
