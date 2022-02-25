@@ -10,6 +10,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Components;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton.Attributes;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Utils.Extensions;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
@@ -17,7 +19,8 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    public abstract class SceneControllerBase<T, TI> : SearchingSingletonBehavior<T> where T : SceneControllerBase<T, TI> where TI : SceneItemBase
+    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading)]
+    public abstract class SceneControllerBase<T, TI> : SingletonBehavior<T> where T : SceneControllerBase<T, TI> where TI : SceneItemBase
     {
         #region Static Area
 
@@ -31,10 +34,6 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 var goBlendingSystem = Instantiate(blendingSystem);
                 DontDestroyOnLoad(goBlendingSystem);
             }
-
-            var goParameterSystem = new GameObject("Scene Parameter System");
-            goParameterSystem.AddComponent<SceneParameterController>();
-            DontDestroyOnLoad(goParameterSystem);
 
             if (createES)
             {

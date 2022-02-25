@@ -4,11 +4,14 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Components;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton.Attributes;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    public sealed class SceneParameterController : SearchingSingletonBehavior<SceneParameterController>
+    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading)]
+    public sealed class SceneParameterController : SingletonBehavior<SceneParameterController>
     {
         internal static void UpdateParameterData(ParameterData parameterData, ScriptableObject[] scriptableObjects, bool overwrite = true)
         {
