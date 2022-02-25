@@ -19,7 +19,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading)]
+    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading, ObjectName = "Scene System")]
     public abstract class SceneControllerBase<T, TI> : SingletonBehavior<T> where T : SceneControllerBase<T, TI> where TI : SceneItemBase
     {
         #region Static Area

@@ -10,7 +10,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Components
 {
-    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading)]
+    [Singleton(Scope = SingletonScope.Application, Instance = SingletonInstance.RequiresNewInstance, CreationTime = SingletonCreationTime.Loading, ObjectName = "Scene System")]
     public sealed class SceneParameterController : SingletonBehavior<SceneParameterController>
     {
         internal static void UpdateParameterData(ParameterData parameterData, ScriptableObject[] scriptableObjects, bool overwrite = true)
