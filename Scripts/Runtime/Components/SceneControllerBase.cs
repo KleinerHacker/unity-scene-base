@@ -83,9 +83,9 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         #region Builtin Methods
 
-        protected virtual void Awake()
+        protected virtual void Start()
         {
-            _blending = FindObjectOfType<BlendingSystem>();
+            _blending = BlendingSystem.Singleton;
             if (_blending == null)
             {
                 Debug.LogWarning("[SceneSystem] Unable to find blending system. Game uses no blending between scenes!");
@@ -167,6 +167,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             {
                 if (_blending != null)
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] Show blending for " + sceneItem.Identifier);
+#endif
+                
                     _blending.ShowBlend(() =>
                     {
                         RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
@@ -175,6 +179,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 }
                 else
                 {
+#if SCENE_VERBOSE
+                    Debug.Log("[SceneSystem] No blending to show for " + sceneItem.Identifier);
+#endif
+                    
                     RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
                         () => DoLoadAsync(sceneItem, onFinished, oldScenes?.ToArray()));
                 }
@@ -192,6 +200,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                     {
                         if (_blending != null)
                         {
+#if SCENE_VERBOSE
+                            Debug.Log("[SceneSystem] Hide blending for " + sceneItem.Identifier);
+#endif
+                            
                             _blending.HideBlend(() =>
                             {
                                 RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
@@ -203,6 +215,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                         }
                         else
                         {
+#if SCENE_VERBOSE
+                            Debug.Log("[SceneSystem] No blending to hide for " + sceneItem.Identifier);
+#endif
+                            
                             RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
                             {
                                 CurrentState = sceneItem.Identifier;
