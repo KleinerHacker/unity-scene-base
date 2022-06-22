@@ -7,12 +7,13 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
+using UnityExtension.Runtime.extension.Scripts.Runtime.Assets;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 {
-    public abstract class SceneSystemSettingsBase<T> : ScriptableObject where T : SceneItemBase
+    public abstract class SceneSystemSettingsBase<TI,TA> : ProviderAsset<TA> where TI : SceneItemBase where TA : SceneSystemSettingsBase<TI,TA>
     {
         #region Inspector Data
 
@@ -20,7 +21,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
         private bool useSystem = true;
 
         [SerializeField]
-        private T[] items = Array.Empty<T>();
+        private TI[] items = Array.Empty<TI>();
 
         [SerializeField]
         private bool createEventSystem = true;
@@ -77,7 +78,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         public bool UseSystem => useSystem;
 
-        public T[] Items => items;
+        public TI[] Items => items;
 
         public bool CreateEventSystem => createEventSystem;
 
