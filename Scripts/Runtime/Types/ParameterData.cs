@@ -74,6 +74,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types
 #endif
             foreach (var item in parameterData._data)
             {
+                Debug.Log("[SceneSystem] > " + item.Key + " = " + item.Value + " (Overwrite: " + overwrite + ")");
                 Add(item.Key, item.Value, overwrite);
             }
         }

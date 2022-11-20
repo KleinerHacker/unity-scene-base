@@ -1,6 +1,6 @@
 {
   "name": "org.pcsoft.scene-base",
-  "version": "2.2.7",
+  "version": "2.2.8",
   "displayName": "Unity Scene System Base Module",
   "description": "Scene System Basic Module for Unity",
   "unity": "2021.3",
@@ -11,8 +11,8 @@
   ],
   "dependencies": {
     "org.pcsoft.blending":"2.1.2",
-    "org.pcsoft.editor-ex":"1.1.12",
-    "org.pcsoft.extension": "1.8.2",
+    "org.pcsoft.editor-ex":"1.1.13",
+    "org.pcsoft.extension": "1.8.3",
     "org.pcsoft.common-ex": "1.1.8",
     "com.unity.inputsystem": "1.4.0"
   },
