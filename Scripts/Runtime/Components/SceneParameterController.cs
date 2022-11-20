@@ -49,6 +49,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             {
 #if SCENE_VERBOSE
                 Debug.Log("[SceneSystem] ... data not found, create new for type " + type.FullName);
+                Debug.Log("[SceneSystem] > " + string.Join(',', data.Keys));
 #endif
                 
                 var parameterData = (ParameterData)type.GetConstructor(Type.EmptyTypes).Invoke(Array.Empty<object>());
@@ -69,6 +70,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                     parameterData.InitializeData(scriptableObject);
                 }
 
+                data.Add(type, parameterData);
                 return parameterData;
             }
 
