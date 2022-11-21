@@ -7,6 +7,7 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor
         {
             public static class Symbol
             {
+                public const string EditorSceneLoading = "SCENE_EDITOR_LOAD";
                 public const string Verbose = "SCENE_VERBOSE";                
             }
         }

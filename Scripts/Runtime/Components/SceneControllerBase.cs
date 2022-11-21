@@ -4,12 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityBlending.Runtime.scene_system.blending.Scripts.Runtime.Components;
 using UnityCommonEx.Runtime.common_ex.Scripts.Runtime.Utils;
+#if UNITY_EDITOR
 using UnityEditor;
+#if SCENE_EDITOR_LOAD
+using UnityEditor.SceneManagement;
+#endif
+#endif
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.SceneManagement;
-using UnityExtension.Runtime.extension.Scripts.Runtime.Components;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Components.Singleton.Attributes;
 using UnityExtension.Runtime.extension.Scripts.Runtime.Utils.Extensions;
@@ -170,7 +174,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Show blending for " + sceneItem.Identifier);
 #endif
-                
+
                     _blending.ShowBlend(() =>
                     {
                         RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
@@ -182,7 +186,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                     Debug.Log("[SceneSystem] No blending to show for " + sceneItem.Identifier);
 #endif
-                    
+
                     RaiseBlendEvent(RuntimeOnBlendSceneType.PostShowBlend, sceneItem.Identifier,
                         () => DoLoadAsync(sceneItem, onFinished, oldScenes?.ToArray()));
                 }
@@ -203,7 +207,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                             Debug.Log("[SceneSystem] Hide blending for " + sceneItem.Identifier);
 #endif
-                            
+
                             _blending.HideBlend(() =>
                             {
                                 RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
@@ -218,7 +222,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                             Debug.Log("[SceneSystem] No blending to hide for " + sceneItem.Identifier);
 #endif
-                            
+
                             RaiseBlendEvent(RuntimeOnBlendSceneType.PostHideBlend, sceneItem.Identifier, () =>
                             {
                                 CurrentState = sceneItem.Identifier;
@@ -234,11 +238,13 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         public void ExitApplication(bool showBlend, Action preExit)
         {
-            ExitApplication(showBlend, preExit == null ? null : callback =>
-            {
-                preExit.Invoke();
-                callback.Invoke();
-            });
+            ExitApplication(showBlend, preExit == null
+                ? null
+                : callback =>
+                {
+                    preExit.Invoke();
+                    callback.Invoke();
+                });
         }
 
         public void ExitApplication(bool showBlend, Action<Action> preExit)
@@ -299,14 +305,22 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 #if SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Load first scene as single");
 #endif
+#if UNITY_EDITOR && SCENE_EDITOR_LOAD
+                    operation = EditorSceneManager.LoadSceneAsyncInPlayMode(newScene, new LoadSceneParameters(LoadSceneMode.Single));
+#else
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Single);
+#endif
                 }
                 else
                 {
 #if SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Load scene as additive");
 #endif
+#if UNITY_EDITOR && SCENE_EDITOR_LOAD
+                    operation = EditorSceneManager.LoadSceneAsyncInPlayMode(newScene, new LoadSceneParameters(LoadSceneMode.Additive));
+#else
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
+#endif
                 }
 
                 operation.allowSceneActivation = false;
