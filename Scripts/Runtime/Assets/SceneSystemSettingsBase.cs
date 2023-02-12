@@ -7,8 +7,6 @@ using UnityEditorEx.Runtime.editor_ex.Scripts.Runtime.Assets;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
-using UnityEngine.UI;
-using UnityExtension.Runtime.extension.Scripts.Runtime.Assets;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
