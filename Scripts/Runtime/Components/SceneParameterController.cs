@@ -1,3 +1,4 @@
+#if PCSOFT_SCENE || PCSOFT_WORLD
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             if (parameterData == null)
                 return;
 
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Update parameter data");
 #endif
             var parameter = GetData(parameterData.GetType(), scriptableObjects);
@@ -39,14 +40,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             if (!typeof(ParameterData).IsAssignableFrom(type))
                 throw new ArgumentException("Type " + type.FullName + " is not a " + nameof(ParameterData) + " type");
             
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Try to get data of type " + type.FullName);
 #endif
 
             var data = Singleton._data;
             if (!data.ContainsKey(type))
             {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                 Debug.Log("[SceneSystem] ... data not found, create new for type " + type.FullName);
                 Debug.Log("[SceneSystem] > " + string.Join(',', data.Keys));
 #endif
@@ -55,14 +56,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 var attribute = type.GetCustomAttribute<ParameterInitialDataTypeAttribute>();
                 if (attribute == null)
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] No initial data found for type " + type.FullName);
 #endif
                     parameterData.InitializeData(null);
                 }
                 else
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Initialize data for type " + type.FullName);
 #endif
                     var scriptableObject = scriptableObjects.FirstOrDefault(x => x.GetType() == attribute.Type);
@@ -79,3 +80,4 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         private readonly IDictionary<Type, ParameterData> _data = new Dictionary<Type, ParameterData>();
     }
 }
+#endif
