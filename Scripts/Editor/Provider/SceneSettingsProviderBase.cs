@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEditorEx.Editor.editor_ex.Scripts.Editor.Utils;
 using UnityEditorInternal;
@@ -20,7 +22,6 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         #endregion
 
         private SerializedObject _settings;
-        private SerializedProperty _useSystemProperty;
         private SerializedProperty _itemsProperty;
         private SerializedProperty _blendingProperty;
         private SerializedProperty _startupBlendingStateProperty;
@@ -55,7 +56,6 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
             if (_settings == null)
                 return;
 
-            _useSystemProperty = _settings.FindProperty("useSystem");
             _itemsProperty = _settings.FindProperty("items");
             _blendingProperty = _settings.FindProperty("blendingSystem");
             _startupBlendingStateProperty = _settings.FindProperty("startupBlendState");
@@ -78,19 +78,41 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
             _gameObjectItemList = new GameObjectItemList(_settings, _additionalGameObjectsProperty);
         }
 
+        public override void OnTitleBarGUI()
+        {
+            EditorGUILayout.BeginVertical();
+            {
+                ExtendedEditorGUILayout.SymbolField("Activate System", GetType().GetCustomAttribute<SceneBaseInfoAttribute>().SymbolName);
+                EditorGUI.BeginDisabledGroup(
+#if PCSOFT_SCENE || PCSOFT_WORLD
+                    false
+#else
+                    true
+#endif
+                );
+                {
+                    ExtendedEditorGUILayout.SymbolField("Verbose Logging", "PCSOFT_SCENE_VERBOSE");
+                }
+                EditorGUI.EndDisabledGroup();
+            }
+            EditorGUILayout.EndVertical();
+        }
+
         public override void OnGUI(string searchContext)
         {
             _settings.Update();
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.PropertyField(_useSystemProperty, new GUIContent("Use System"));
-            ExtendedEditorGUILayout.SymbolField("Editor Scene Loading", UnitySceneBaseEditorConstants.Building.Symbol.EditorSceneLoading);
-            ExtendedEditorGUILayout.SymbolField("Verbose Logging", UnitySceneBaseEditorConstants.Building.Symbol.Verbose);
+            ExtendedEditorGUILayout.SymbolField("Editor Scene Loading", "PCSOFT_SCENE_EDITOR_LOAD");
 
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            EditorGUI.BeginDisabledGroup(!_useSystemProperty.boolValue);
+            EditorGUI.BeginDisabledGroup(
+#if PCSOFT_SCENE || PCSOFT_WORLD
+                false
+#else
+                true
+#endif
+            );
             {
                 if (HasAnyEmptyIdentifier)
                 {
@@ -159,6 +181,9 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         private void DrawParameterInitialDataSection(SerializedProperty parameterInitData)
         {
             var scriptableObject = (ScriptableObject)parameterInitData.objectReferenceValue;
+            if (scriptableObject == null)
+                return;
+
             var name = scriptableObject.name;
 
             if (!_foldInitData.ContainsKey(name))
@@ -181,5 +206,16 @@ namespace UnitySceneBase.Editor.scene_system.scene_base.Scripts.Editor.Provider
         }
 
         protected abstract ReorderableList CreateItemList(SerializedObject settings, SerializedProperty itemsProperty);
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class SceneBaseInfoAttribute : Attribute
+    {
+        public string SymbolName { get; }
+
+        public SceneBaseInfoAttribute(string symbolName)
+        {
+            SymbolName = symbolName;
+        }
     }
 }

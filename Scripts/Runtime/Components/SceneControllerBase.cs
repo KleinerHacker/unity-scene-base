@@ -1,3 +1,4 @@
+#if PCSOFT_SCENE || PCSOFT_WORLD
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Types;
 using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 #if UNITY_EDITOR
 using UnityEditor;
-#if SCENE_EDITOR_LOAD
+#if PCSOFT_SCENE_EDITOR_LOAD
 using UnityEditor.SceneManagement;
 #endif
 #endif
@@ -134,7 +135,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         protected void Load(string identifier, bool doNotUnload, Action onFinished, ParameterData parameterData, bool overwrite,
             ScriptableObject[] scriptableObjects)
         {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Load scene(s) for " + identifier + " with parameter data " + parameterData);
 #endif
 
@@ -171,7 +172,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             {
                 if (_blending != null)
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Show blending for " + sceneItem.Identifier);
 #endif
 
@@ -183,7 +184,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 }
                 else
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] No blending to show for " + sceneItem.Identifier);
 #endif
 
@@ -204,7 +205,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                     {
                         if (_blending != null)
                         {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                             Debug.Log("[SceneSystem] Hide blending for " + sceneItem.Identifier);
 #endif
 
@@ -219,7 +220,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                         }
                         else
                         {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                             Debug.Log("[SceneSystem] No blending to hide for " + sceneItem.Identifier);
 #endif
 
@@ -273,14 +274,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             var oldScenes = oldScenesGetter();
             //If all scenes must unload (this is not be able cause one scene must exists anymore). In this case a complete reload is required.
             var requiresCompleteLoad = (oldScenes?.Length ?? 0) >= SceneManager.sceneCount;
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Change scene requires complete reload? " + requiresCompleteLoad);
 #endif
             if (!requiresCompleteLoad)
             {
                 if (oldScenes != null && oldScenes.Length > 0)
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Unload scenes: " + string.Join(',', oldScenes));
 #endif
                     foreach (var oldScene in oldScenes)
@@ -291,7 +292,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             }
 
             var newScenes = newScenesGetter();
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Load scenes: " + string.Join(',', newScenes));
 #endif
             var operations = new List<AsyncOperation>();
@@ -302,10 +303,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 AsyncOperation operation;
                 if (requiresCompleteLoad && i == 0)
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Load first scene as single");
 #endif
-#if UNITY_EDITOR && SCENE_EDITOR_LOAD
+#if UNITY_EDITOR && PCSOFT_SCENE_EDITOR_LOAD
                     operation = EditorSceneManager.LoadSceneAsyncInPlayMode(newScene, new LoadSceneParameters(LoadSceneMode.Single));
 #else
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Single);
@@ -313,10 +314,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
                 }
                 else
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Load scene as additive");
 #endif
-#if UNITY_EDITOR && SCENE_EDITOR_LOAD
+#if UNITY_EDITOR && PCSOFT_SCENE_EDITOR_LOAD
                     operation = EditorSceneManager.LoadSceneAsyncInPlayMode(newScene, new LoadSceneParameters(LoadSceneMode.Additive));
 #else
                     operation = SceneManager.LoadSceneAsync(newScene, LoadSceneMode.Additive);
@@ -330,7 +331,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
                 if (requiresCompleteLoad && i == 0)
                 {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Wait for first scene is loaded completely");
 #endif
                     var waitForReadySingle = WaitForReady(operations);
@@ -338,7 +339,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
                     operation.allowSceneActivation = true;
 
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                     Debug.Log("[SceneSystem] Wait for first scene is done");
 #endif
                     var waitForDoneSingle = WaitForDone(operations);
@@ -357,7 +358,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
             var waitForDone = WaitForDone(operations);
             while (waitForDone.MoveNext()) yield return waitForDone.Current;
 
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Scene loading finished");
 #endif
             onFinished?.Invoke();
@@ -365,12 +366,12 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         private IEnumerator WaitForReady(List<AsyncOperation> operations)
         {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Wait for scene loading");
 #endif
             while (!operations.IsReady())
             {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                 Debug.Log("[SceneSystem] State: " + operations.CalculateProgress() + " -> " + string.Join('|', operations.Select(x => x.progress)));
 #endif
                 if (_blending != null)
@@ -384,12 +385,12 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
 
         private IEnumerator WaitForDone(List<AsyncOperation> operations)
         {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Wait for scene is done");
 #endif
             while (!operations.IsDone())
             {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                 Debug.Log("[SceneSystem] State: " + operations.CalculateProgress() + " -> " + string.Join('|', operations.Select(x => x.progress)));
 #endif
                 if (_blending != null)
@@ -405,14 +406,14 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         {
             if (!UseBlendCallbacks || !SceneEventUtils.HasBlendingEvents(type))
             {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No blend events found in game, " + type + " for " + identifier);
 #endif
                 asyncAction?.Invoke();
                 return;
             }
 
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Raise blend events " + type + " for " + identifier);
 #endif
             var counter = new Decrementing(SceneEventUtils.GetBlendEventCount(type));
@@ -423,13 +424,13 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         {
             if (!UseSwitchCallbacks || !SceneEventUtils.HasSceneEvents(type))
             {
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
                 Debug.Log("[SceneSystem] No scene switch events found in game, " + type + " for " + identifier);
 #endif
                 return scenes;
             }
 
-#if SCENE_VERBOSE
+#if PCSOFT_SCENE_VERBOSE
             Debug.Log("[SceneSystem] Raise scene switch events " + type + " for " + identifier);
 #endif
             var result = new List<string>(scenes);
@@ -444,3 +445,4 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Compone
         protected abstract bool IsAllowNullParameterData(string identifier);
     }
 }
+#endif

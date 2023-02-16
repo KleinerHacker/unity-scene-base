@@ -12,12 +12,9 @@ using UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Utils;
 
 namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 {
-    public abstract class SceneSystemSettingsBase<TI,TA> : ProviderAsset<TA> where TI : SceneItemBase where TA : SceneSystemSettingsBase<TI,TA>
+    public abstract class SceneSystemSettingsBase<TI, TA> : ProviderAsset<TA> where TI : SceneItemBase where TA : SceneSystemSettingsBase<TI, TA>
     {
         #region Inspector Data
-
-        [SerializeField]
-        private bool useSystem = true;
 
         [SerializeField]
         private TI[] items = Array.Empty<TI>();
@@ -75,8 +72,6 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
 
         #region Properties
 
-        public bool UseSystem => useSystem;
-
         public TI[] Items => items;
 
         public bool CreateEventSystem => createEventSystem;
@@ -128,10 +123,10 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
                 var attribute = parameterType.GetCustomAttribute<ParameterInitialDataTypeAttribute>();
                 if (attribute == null)
                     continue;
-                
-                if (parameterInitialData.Select(x => x.name).Any(x => string.Equals(x,parameterType.Name, StringComparison.OrdinalIgnoreCase)))
+
+                if (parameterInitialData.Select(x => x.name).Any(x => string.Equals(x, parameterType.Name, StringComparison.OrdinalIgnoreCase)))
                     continue;
-                
+
                 var assetName = "Assets/Resources/" + parameterType.Name + ".asset";
                 var scriptableObject = AssetDatabase.LoadAssetAtPath<ScriptableObject>(assetName);
                 if (scriptableObject == null)
@@ -144,7 +139,7 @@ namespace UnitySceneBase.Runtime.scene_system.scene_base.Scripts.Runtime.Assets
             }
         }
 #endif
-        
+
         #endregion
     }
 
